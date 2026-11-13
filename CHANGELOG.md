@@ -10,6 +10,8 @@ Repo: https://github.com/openclaw/acpx
 
 - Runtime/embedding: expose advertised agent information and capabilities in handshake-only doctor reports. Thanks @MaktubCN.
 
+- CodeBuddy: normalize known legacy permission kinds before ACP validation while preserving exact option IDs and rejecting unknown combinations.
+
 ### Additions
 
 - Runtime/embedding: allow hosts to supply a synchronous `spawnAgent` callback for owned agents and native probes while retaining ACPX process lifecycle and cleanup. Adapted from Paperclip AI’s MIT-licensed hook.
