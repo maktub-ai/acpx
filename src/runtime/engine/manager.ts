@@ -374,6 +374,7 @@ export class AcpRuntimeManager {
       onAcpMessage:
         options.processLaunchScope?.kind === "runtime-session" ? this.observeAcpMessage : undefined,
       spawnAgent: this.options.spawnAgent,
+      sessionRequestMeta: this.options.sessionRequestMeta,
       agentProcessEnv: this.options.agentProcessEnv,
       agentProcessEnvAllow: this.options.agentProcessEnvAllow,
       agentProcessEnvBlock: this.options.agentProcessEnvBlock,

@@ -272,8 +272,19 @@ export type AcpAgentSpawner = (input: {
   options: SpawnOptions;
 }) => ChildProcess;
 
+export type AcpSessionRequestContext = {
+  method: "session/new" | "session/load" | "session/resume";
+  sessionId?: string;
+};
+
+/** Per-request JSON metadata; host values replace generated top-level namespaces. */
+export type AcpSessionRequestMeta = (
+  context: AcpSessionRequestContext,
+) => Record<string, unknown> | undefined;
+
 export type AcpClientOptions = {
   spawnAgent?: AcpAgentSpawner;
+  sessionRequestMeta?: AcpSessionRequestMeta;
   agentCommand: string;
   agentArgv?: string[];
   /** Trusted child-only environment overlay; never persisted as session options. */

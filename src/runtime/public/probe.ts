@@ -7,6 +7,7 @@ import type {
   AcpRuntimeDoctorReport,
   AcpRuntimeOptions,
   AcpRuntimeSessionModels,
+  AcpSessionRequestMeta,
 } from "./contract.js";
 
 export type RuntimeHealthReport = Pick<
@@ -25,6 +26,8 @@ export type ProbeRuntimeDeps = {
 export type InspectAgentModelsOptions = {
   /** Override owned agent/probe process creation, as in AcpRuntimeOptions. */
   spawnAgent?: AcpAgentSpawner;
+  /** Transient metadata for the discovery session; same contract as AcpRuntimeOptions. */
+  sessionRequestMeta?: AcpSessionRequestMeta;
   agentCommand: string[];
   cwd: string;
   signal?: AbortSignal;
@@ -59,6 +62,7 @@ export async function inspectAgentModels(
     ...normalizeAgentCommandInput(options.agentCommand),
     cwd: options.cwd,
     spawnAgent: options.spawnAgent,
+    sessionRequestMeta: options.sessionRequestMeta,
     agentProcessEnv: options.agentProcessEnv,
     agentProcessEnvAllow: options.agentProcessEnvAllow,
     agentProcessEnvBlock: options.agentProcessEnvBlock,
@@ -228,6 +232,7 @@ function createProbeClient(
     ...agentCommand,
     cwd: options.cwd,
     spawnAgent: options.spawnAgent,
+    sessionRequestMeta: options.sessionRequestMeta,
     agentProcessEnv: options.agentProcessEnv,
     agentProcessEnvAllow: options.agentProcessEnvAllow,
     agentProcessEnvBlock: options.agentProcessEnvBlock,
