@@ -898,8 +898,15 @@ export class AcpClient {
       throw spawnError;
     }
 
-    const child = requireAgentStdio(spawnedChild);
-    this.agentDescendants.set(child, new ProcessDescendants(child));
+    this.agentDescendants.set(spawnedChild, new ProcessDescendants(spawnedChild));
+    let child: ChildProcessByStdio<Writable, Readable, Readable>;
+    try {
+      child = requireAgentStdio(spawnedChild);
+    } catch (error) {
+      this.notifyProcessSpawnFailure(launch, error);
+      await this.terminateAgentProcess(spawnedChild);
+      throw error;
+    }
     const pid = child.pid;
     if (pid === undefined) {
       const spawnError = new AgentSpawnError(

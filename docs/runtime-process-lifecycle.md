@@ -100,8 +100,9 @@ child immediately so ACPX can attach spawn/error observers. Lifecycle admission,
 PID tracking, and cleanup remain with ACPX. Shared runtimes reject this callback.
 The hook does not replace agent-requested terminal creation.
 
-This hook adapts Paperclip’s MIT-licensed patch; see
-[third-party notices](../THIRD_PARTY_NOTICES.md).
+This hook adapts
+[Paperclip’s MIT-licensed patch](https://github.com/paperclipai/paperclip/blob/ff8ec41e6a1236694d28f463b60c7d136442f9c9/patches/acpx%400.22.0.patch).
+The package includes its license and source in `THIRD_PARTY_NOTICES.md`.
 
 ## Observe session protocol messages
 

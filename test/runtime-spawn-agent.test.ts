@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
-import { spawn, type SpawnOptions } from "node:child_process";
+import { spawn, type ChildProcess, type SpawnOptions } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { AcpClient } from "../src/acp/client.js";
 import {
   createAcpRuntime,
   createAgentRegistry,
@@ -69,11 +70,25 @@ test("host spawning applies to runtime probes, sessions, reconnects, and model i
 
 test("host spawning also owns native compatibility probes", async () => {
   const invocations: Array<{ args: string[]; options: SpawnOptions }> = [];
-  await inspectAgentModels({
+  const lifecycle: string[] = [];
+  const client = new AcpClient({
     cwd: process.cwd(),
-    agentCommand: ["gemini", "--acp"],
+    agentCommand: "gemini --acp",
+    permissionMode: "deny-all",
+    processLifecycle: {
+      onBeforeSpawn: ({ args }) => {
+        lifecycle.push(`before:${args[0]}`);
+      },
+      onSpawned: ({ args }) => {
+        lifecycle.push(`started:${args[0]}`);
+      },
+      onExit: ({ args }) => {
+        lifecycle.push(`exit:${args[0]}`);
+      },
+    },
     spawnAgent: ({ command, args, options }) => {
       assert.equal(command, "gemini");
+      lifecycle.push(`spawn:${args[0]}`);
       invocations.push({ args, options });
       return spawn(
         process.execPath,
@@ -84,8 +99,44 @@ test("host spawning also owns native compatibility probes", async () => {
       );
     },
   });
+  try {
+    await client.start();
+  } finally {
+    await client.close();
+  }
   assert.equal(invocations.length, 2);
   assert.deepEqual(invocations[0].args, ["--version"]);
   assert.deepEqual(invocations[0].options.stdio, ["ignore", "pipe", "pipe"]);
   assert.deepEqual(invocations[1].args, ["--experimental-acp"]);
+  assert.deepEqual(lifecycle, [
+    "before:--version",
+    "spawn:--version",
+    "started:--version",
+    "exit:--version",
+    "before:--experimental-acp",
+    "spawn:--experimental-acp",
+    "started:--experimental-acp",
+    "exit:--experimental-acp",
+  ]);
+});
+
+test("host children with invalid piped stdio are stopped before startup rejects", async (t) => {
+  let child: ChildProcess | undefined;
+  const client = new AcpClient({
+    agentCommand: process.execPath,
+    agentArgv: [process.execPath, "-e", "setInterval(() => {}, 1000)"],
+    cwd: process.cwd(),
+    permissionMode: "deny-all",
+    spawnAgent: ({ command, args, options }) => {
+      child = spawn(command, args, { ...options, stdio: ["ignore", "pipe", "pipe"] });
+      return child;
+    },
+  });
+  t.after(async () => {
+    child?.kill("SIGKILL");
+    await client.close();
+  });
+  await assert.rejects(client.start(), /piped stdin\/stdout\/stderr/u);
+  assert(child);
+  assert(child.exitCode !== null || child.signalCode !== null, "invalid host child must exit");
 });

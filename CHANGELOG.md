@@ -14,7 +14,7 @@ Repo: https://github.com/openclaw/acpx
 
 - Grok Build: retain cached-token authentication for the `grok agent --no-leader stdio` command without removing its launch flag.
 
-### Additions
+### Changes
 
 - Runtime/embedding: allow hosts to supply a synchronous `spawnAgent` callback for owned agents and native probes while retaining ACPX process lifecycle and cleanup. Adapted from Paperclip AI’s MIT-licensed hook.
 
