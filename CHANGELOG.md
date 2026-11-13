@@ -12,6 +12,8 @@ Repo: https://github.com/openclaw/acpx
 
 - CodeBuddy: normalize known legacy permission kinds before ACP validation while preserving exact option IDs and rejecting unknown combinations.
 
+- Grok Build: retain cached-token authentication for the `grok agent --no-leader stdio` command without removing its launch flag.
+
 ### Additions
 
 - Runtime/embedding: allow hosts to supply a synchronous `spawnAgent` callback for owned agents and native probes while retaining ACPX process lifecycle and cleanup. Adapted from Paperclip AI’s MIT-licensed hook.
