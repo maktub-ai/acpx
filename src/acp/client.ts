@@ -73,6 +73,7 @@ import type {
   AcpSessionRequestContext,
   AcpElicitationHandler,
   AcpPermissionHandler,
+  AcpQuestionHandler,
   AcpElicitationMode,
   AcpProcessLaunch,
   AcpProcessLaunchScope,
@@ -306,6 +307,7 @@ type ActivePromptState = {
   admissionFailure?: { error: unknown };
   elicitationHandler?: AcpElicitationHandler;
   permissionHandler?: AcpPermissionHandler;
+  questionHandler?: AcpQuestionHandler;
   elicitationController: AbortController;
   requestController: AbortController;
 };
@@ -313,6 +315,7 @@ type ActivePromptState = {
 type DelegatedRequestOwner = AcpControlAuthority & {
   signal: AbortSignal;
   permissionHandler?: AcpPermissionHandler;
+  questionHandler?: AcpQuestionHandler;
 };
 
 type ElicitationOwner = {
@@ -1341,6 +1344,7 @@ export class AcpClient {
     onElicitation?: AcpElicitationHandler,
     onPermissionRequest?: AcpPermissionHandler,
     authority?: AcpControlAuthority,
+    onQuestionRequest?: AcpQuestionHandler,
   ): Promise<PromptResponse> {
     const connection = this.getConnection();
     const normalizedPrompt = this.normalizePromptForAgent(prompt);
@@ -1355,6 +1359,7 @@ export class AcpClient {
       onElicitation,
       onPermissionRequest,
       authority,
+      onQuestionRequest,
     );
 
     try {
@@ -1390,6 +1395,7 @@ export class AcpClient {
     elicitationHandler: AcpElicitationHandler | undefined,
     permissionHandler: AcpPermissionHandler | undefined,
     authority: AcpControlAuthority | undefined,
+    questionHandler: AcpQuestionHandler | undefined,
   ): ActivePromptState {
     this.cancellingSessionIds.delete(sessionId);
     const active: ActivePromptState = {
@@ -1398,6 +1404,7 @@ export class AcpClient {
       authority,
       elicitationHandler,
       permissionHandler,
+      questionHandler: questionHandler ?? this.options.onQuestionRequest,
       elicitationController: new AbortController(),
       requestController: new AbortController(),
     };
@@ -2207,29 +2214,57 @@ export class AcpClient {
     if (!this.isDelegatedRequestActive(owner)) {
       return cancelledPermissionResponse();
     }
-    if (!this.hasPermissionOwner(params.sessionId)) {
-      return this.finishPermissionRequest(params, owner, cancelledPermissionResponse());
-    }
-
-    // Antigravity encodes questions as permissions, with answers marked allow_once.
-    // Neither permission policies nor the host's allow/reject API can answer them.
+    // Antigravity marks answers as allow_once; only an explicit question callback
+    // may select one. Permission handlers and policies must never invent answers.
     if (
       this.initResult?.agentInfo?.name === "antigravity-acp" &&
       params.toolCall.toolCallId.startsWith("interaction_")
     ) {
-      const response = this.handleModePermissionError(
-        params.sessionId,
-        new PermissionPromptUnavailableError(
-          "Antigravity requested a user answer. acpx cannot answer Antigravity interaction questions; continue in an interactive client.",
-        ),
-      );
-      return this.finishPermissionRequest(params, owner, response);
+      return await this.handleQuestionRequest(params, owner);
+    }
+    if (!this.hasPermissionOwner(params.sessionId)) {
+      return this.finishPermissionRequest(params, owner, cancelledPermissionResponse());
     }
 
     const response =
       (await this.tryHandlePermissionRequestWithHost(params, owner)) ??
       (await this.resolvePermissionRequestFromMode(params, owner));
     return this.finishPermissionRequest(params, owner, response);
+  }
+
+  private async handleQuestionRequest(
+    params: RequestPermissionRequest,
+    owner: DelegatedRequestOwner,
+  ): Promise<RequestPermissionResponse> {
+    if (!this.pendingPromptOwners.some((active) => active.sessionId === params.sessionId)) {
+      return cancelledPermissionResponse();
+    }
+    const handler = owner.questionHandler;
+    if (!handler) {
+      const response = this.handleModePermissionError(
+        params.sessionId,
+        new PermissionPromptUnavailableError(
+          "Antigravity requested a user answer. Configure onQuestionRequest or continue in an interactive client.",
+        ),
+      );
+      return this.finishPermissionRequest(params, owner, response);
+    }
+    try {
+      const decision = await raceWithAbort(
+        owner.signal,
+        handler({ sessionId: params.sessionId, raw: params }, { signal: owner.signal }),
+      );
+      if (
+        this.isDelegatedRequestActive(owner) &&
+        decision?.outcome === "selected" &&
+        params.options.some((option) => option.optionId === decision.optionId)
+      ) {
+        return { outcome: { outcome: "selected", optionId: decision.optionId } };
+      }
+    } catch {
+      // Host UI failures cancel the question; approval policy cannot answer it.
+    }
+    return cancelledPermissionResponse();
   }
 
   private finishPermissionRequest(
@@ -2353,6 +2388,7 @@ export class AcpClient {
     return {
       signal,
       permissionHandler: active?.permissionHandler ?? this.options.onPermissionRequest,
+      questionHandler: active?.questionHandler,
       assertActive: () => {
         if (this.closing || this.closeEpoch !== epoch || this.cancellingSessionIds.has(sessionId)) {
           throw RequestError.requestCancelled();

@@ -528,6 +528,7 @@ test("shared mode rejects in-process callbacks and unsupported session modes", a
     for (const callbacks of [
       { spawnAgent: () => undefined },
       { onPermissionRequest: () => "approve" },
+      { onQuestionRequest: () => ({ outcome: "cancel" }) },
       { sessionPermissions: () => ({ permissionMode: "approve-all" }) },
       { fs: false },
       { terminal: false },
@@ -558,6 +559,17 @@ test("shared mode rejects in-process callbacks and unsupported session modes", a
           mode: "prompt",
           text: "no",
           onPermissionRequest: async () => ({ outcome: "allow_once" }),
+        }),
+      /callbacks/u,
+    );
+    assert.throws(
+      () =>
+        runtime.startTurn({
+          handle,
+          requestId: "question",
+          mode: "prompt",
+          text: "no",
+          onQuestionRequest: async () => ({ outcome: "cancel" }),
         }),
       /callbacks/u,
     );

@@ -63,6 +63,9 @@ export type {
   AcpPermissionDecision,
   AcpPermissionHandler,
   AcpPermissionRequest,
+  AcpQuestionDecision,
+  AcpQuestionHandler,
+  AcpQuestionRequest,
   AcpProcessExit,
   AcpProcessLaunch,
   AcpProcessLaunchScope,
@@ -259,6 +262,7 @@ export class AcpxRuntime implements AcpxRuntimeLike {
         assertActive: input.assertActive,
         onElicitation: input.onElicitation,
         onPermissionRequest: input.onPermissionRequest,
+        onQuestionRequest: input.onQuestionRequest,
       }),
     );
     // Callers may hold the turn before reading its lazy promises or events.
@@ -301,6 +305,7 @@ export class AcpxRuntime implements AcpxRuntimeLike {
       assertActive: input.assertActive,
       onElicitation: input.onElicitation,
       onPermissionRequest: input.onPermissionRequest,
+      onQuestionRequest: input.onQuestionRequest,
     });
   }
 

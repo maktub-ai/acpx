@@ -15,6 +15,7 @@ import type {
   AcpElicitationHandler,
   AcpElicitationMode,
   AcpPermissionHandler,
+  AcpQuestionHandler,
   AcpProcessLifecycle,
   AcpAgentSpawner,
   AcpSessionRequestMeta,
@@ -40,7 +41,10 @@ export type {
   AcpElicitationResponse,
   AcpPermissionDecision,
   AcpPermissionHandler,
+  AcpQuestionHandler,
   AcpPermissionRequest,
+  AcpQuestionDecision,
+  AcpQuestionRequest,
   AcpProcessExit,
   AcpProcessLaunch,
   AcpProcessLaunchScope,
@@ -140,6 +144,8 @@ export type AcpRuntimeTurnInput = AcpControlAuthority & {
    * default callback.
    */
   onPermissionRequest?: AcpPermissionHandler;
+  /** Handles Antigravity fixed-choice questions separately from tool approval. */
+  onQuestionRequest?: AcpQuestionHandler;
   /** Handles ACP elicitation requests owned by this prompt turn. */
   onElicitation?: AcpElicitationHandler;
 };
@@ -512,6 +518,8 @@ export type AcpRuntimeOptions = {
   /** Override owned agent/probe process creation while retaining ACPX lifecycle and cleanup. */
   spawnAgent?: AcpAgentSpawner;
   onPermissionRequest?: AcpPermissionHandler;
+  /** Handles Antigravity fixed-choice questions separately from tool approval. */
+  onQuestionRequest?: AcpQuestionHandler;
   /**
    * ACP filesystem callback capability for new and reconnected session clients.
    * Omitted defaults to enabled, matching `AcpClientOptions`. Retained clients
