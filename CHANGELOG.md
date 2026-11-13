@@ -6,19 +6,20 @@ Repo: https://github.com/openclaw/acpx
 
 ## Unreleased
 
+## 0.22.0-mandala.1 - 2026-11-13
+
 ### Changes
 
 - Runtime/embedding: expose advertised agent information and capabilities in handshake-only doctor reports. Thanks @MaktubCN.
+- Runtime/embedding: allow hosts to supply a synchronous `spawnAgent` callback for owned agents and native probes, retaining lifecycle checks and cleanup. Adapted from Paperclip AI's MIT hook. Thanks @MaktubCN.
+- Runtime/embedding: supply transient, validated `_meta` for every session creation and recovery request without persisting host policy. Thanks @MaktubCN.
+- Runtime/Antigravity: explicitly answer fixed-choice questions with `onQuestionRequest`, keeping permission approval separate and cancelling missing, invalid or expired answers. Thanks @MaktubCN.
 
-- CodeBuddy: normalize known legacy permission kinds before ACP validation while preserving exact option IDs and rejecting unknown combinations.
+### Fixes
 
-- Grok Build: retain cached-token authentication for the `grok agent --no-leader stdio` command without removing its launch flag.
-
-### Changes
-
-- Runtime/embedding: allow hosts to supply a synchronous `spawnAgent` callback for owned agents and native probes while retaining ACPX process lifecycle and cleanup. Adapted from Paperclip AI’s MIT-licensed hook.
-
-- Runtime/Antigravity: let embedding hosts explicitly answer fixed-choice questions with `onQuestionRequest`, while keeping permission approval separate and cancelling missing, invalid, or expired answers.
+- CodeBuddy: normalize known legacy permission kinds before ACP validation while preserving exact option IDs and rejecting unknown combinations. Thanks @MaktubCN.
+- Grok Build: retain cached-token authentication for `grok agent --no-leader stdio` without removing its launch flag. Thanks @MaktubCN.
+- OpenClaw: require existing native sessions during recovery, preserve explicit gateway routing, and refuse fresh-session replacement. Thanks @MaktubCN.
 
 ## 0.22.0 - 2026-11-06
 

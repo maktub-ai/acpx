@@ -1,5 +1,9 @@
 # acpx 🤝 — Agents talking to agents, minus the terminal séance
 
+This is Mandala's lightweight MIT fork of [openclaw/acpx](https://github.com/openclaw/acpx), based on v0.22.0. It keeps focused embedding and compatibility fixes while they are proposed upstream. The process-spawning hook is adapted from [Paperclip's MIT patch](https://github.com/paperclipai/paperclip/blob/ff8ec41e6a1236694d28f463b60c7d136442f9c9/patches/acpx%400.22.0.patch), with its full notice retained. See the [patch inventory and update process](https://github.com/maktub-ai/acpx/blob/mandala/UPSTREAM.md).
+
+The `acpx` npm package and the badges below refer to upstream. This fork is distributed as versioned [GitHub release tarballs](https://github.com/maktub-ai/acpx/releases); consumers pin an asset and its lockfile integrity. It is not an upstream release or an endorsement by OpenClaw or Paperclip.
+
 <p align="center">
   <img src="acpx_banner.svg" alt="acpx banner" width="100%" />
 </p>
