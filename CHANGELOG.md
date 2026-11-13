@@ -10,6 +10,10 @@ Repo: https://github.com/openclaw/acpx
 
 - Runtime/embedding: expose advertised agent information and capabilities in handshake-only doctor reports. Thanks @MaktubCN.
 
+### Additions
+
+- Runtime/embedding: allow hosts to supply a synchronous `spawnAgent` callback for owned agents and native probes while retaining ACPX process lifecycle and cleanup. Adapted from Paperclip AI’s MIT-licensed hook.
+
 ## 0.22.0 - 2026-11-06
 
 **Highlights:** Patch security advisories in glob, minimatch, qs, and re2js; add Goose, DeepSeek Harness, and experimental Ante support; expose ACP message observation, configure models per flow node, and improve session reliability and shell diagnostics.

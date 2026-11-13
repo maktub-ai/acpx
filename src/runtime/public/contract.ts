@@ -16,6 +16,7 @@ import type {
   AcpElicitationMode,
   AcpPermissionHandler,
   AcpProcessLifecycle,
+  AcpAgentSpawner,
   McpServer,
   NonInteractivePermissionPolicy,
   PermissionMode,
@@ -41,6 +42,7 @@ export type {
   AcpProcessLaunch,
   AcpProcessLaunchScope,
   AcpProcessLifecycle,
+  AcpAgentSpawner,
   AcpProcessSpawnFailure,
   AcpProcessStarted,
   PermissionPolicy,
@@ -496,6 +498,8 @@ export type AcpRuntimeOptions = {
   onAcpMessage?: (direction: AcpMessageDirection, message: AcpJsonRpcMessage) => void;
   /** Optional lifecycle observer for ACP agent processes owned by this runtime. */
   processLifecycle?: AcpProcessLifecycle;
+  /** Override owned agent/probe process creation while retaining ACPX lifecycle and cleanup. */
+  spawnAgent?: AcpAgentSpawner;
   onPermissionRequest?: AcpPermissionHandler;
   /**
    * ACP filesystem callback capability for new and reconnected session clients.

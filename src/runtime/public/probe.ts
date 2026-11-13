@@ -3,6 +3,7 @@ import { AcpClient } from "../../acp/client.js";
 import { DEFAULT_AGENT_NAME } from "../../agent-registry.js";
 import { TimeoutError } from "../../async-control.js";
 import type {
+  AcpAgentSpawner,
   AcpRuntimeDoctorReport,
   AcpRuntimeOptions,
   AcpRuntimeSessionModels,
@@ -22,6 +23,8 @@ export type ProbeRuntimeDeps = {
 };
 
 export type InspectAgentModelsOptions = {
+  /** Override owned agent/probe process creation, as in AcpRuntimeOptions. */
+  spawnAgent?: AcpAgentSpawner;
   agentCommand: string[];
   cwd: string;
   signal?: AbortSignal;
@@ -55,6 +58,7 @@ export async function inspectAgentModels(
   const client = new AcpClient({
     ...normalizeAgentCommandInput(options.agentCommand),
     cwd: options.cwd,
+    spawnAgent: options.spawnAgent,
     agentProcessEnv: options.agentProcessEnv,
     agentProcessEnvAllow: options.agentProcessEnvAllow,
     agentProcessEnvBlock: options.agentProcessEnvBlock,
@@ -223,6 +227,7 @@ function createProbeClient(
   const clientOptions = {
     ...agentCommand,
     cwd: options.cwd,
+    spawnAgent: options.spawnAgent,
     agentProcessEnv: options.agentProcessEnv,
     agentProcessEnvAllow: options.agentProcessEnvAllow,
     agentProcessEnvBlock: options.agentProcessEnvBlock,
