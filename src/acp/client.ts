@@ -141,6 +141,7 @@ import {
   readMaxAcpMessageBytes,
 } from "./ndjson-stream.js";
 import { observeAcpStream } from "./observed-stream.js";
+import { isOpenClawAcpAgent, openClawResumeMeta } from "./openclaw-session.js";
 import { ProcessDescendants } from "./process-descendants.js";
 import {
   formatSessionControlAcpSummary,
@@ -1201,6 +1202,14 @@ export class AcpClient {
     });
   }
 
+  private isOpenClawAgent(): boolean {
+    return isOpenClawAcpAgent(
+      this.options.agentCommand,
+      this.options.agentArgv,
+      this.initResult?.agentInfo?.name,
+    );
+  }
+
   private sessionMeta(context: AcpSessionRequestContext): Record<string, unknown> | undefined {
     const { command, args } = resolveAgentCommandParts(
       this.options.agentCommand,
@@ -1278,6 +1287,9 @@ export class AcpClient {
     cwd = this.options.cwd,
     options: LoadSessionOptions = {},
   ): Promise<SessionLoadResult> {
+    if (this.isOpenClawAgent()) {
+      return await this.resumeSession(sessionId, cwd, options.authority);
+    }
     const connection = this.getConnection();
     const sessionCwd = await resolveAgentSessionCwd(cwd, this.options.agentCommand);
     assertControlAuthority(options.authority);
@@ -1318,6 +1330,12 @@ export class AcpClient {
     authority?: AcpControlAuthority,
   ): Promise<SessionResumeResult> {
     assertControlAuthority(authority);
+    const openClaw = this.isOpenClawAgent();
+    if (openClaw && !this.supportsResumeSession()) {
+      throw new Error(
+        "OpenClaw recovery requires session/resume support; update OpenClaw before resuming this session.",
+      );
+    }
     const connection = this.getConnection();
     const sessionCwd = await resolveAgentSessionCwd(cwd, this.options.agentCommand);
     const response = await this.runConnectionRequest(
@@ -1326,7 +1344,12 @@ export class AcpClient {
           sessionId,
           cwd: sessionCwd,
           mcpServers: this.options.mcpServers ?? [],
-          _meta: this.sessionMeta({ method: "session/resume", sessionId }),
+          _meta: openClaw
+            ? {
+                ...this.sessionMeta({ method: "session/resume", sessionId }),
+                ...openClawResumeMeta(sessionId, this.options.agentCommand, this.options.agentArgv),
+              }
+            : this.sessionMeta({ method: "session/resume", sessionId }),
         }),
       authority,
     );
